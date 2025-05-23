@@ -1,4 +1,36 @@
 <?php
+
+// Создаем класс с подключенным интерфейсом Iterator
+class DomIterator implements Iterator {
+    private int $position = 0;
+    private DOMNodeList $nodes;
+    
+    public function __construct(DOMNodeList $nodes) {
+        $this->nodes = $nodes;
+        $this->rewind();
+    }
+    
+    public function rewind(): void {
+        $this->position = 0;
+    }
+    
+    public function current(): DOMElement {
+        return $this->nodes->item($this->position);
+    }
+    
+    public function key(): int {
+        return $this->position;
+    }
+    
+    public function next(): void {
+        $this->position++;
+    }
+    
+    public function valid(): bool {
+        return $this->position < $this->nodes->length;
+    }
+}
+
 // Подключаем HTML-файл и записываем в переменную содержимое
 $html = file_get_contents('index.html');
 
@@ -15,15 +47,17 @@ $metaTags = [
     'keywords' => []     
 ];
 
-// Итерация 1: Получаем все теги <title>
+// Итерация 'title'
+$titleIterator = new DomIterator($dom->getElementsByTagName('title'));
 
-foreach ($dom->getElementsByTagName('title') as $t) {
+foreach ($titleIterator as $t) {
     $metaTags['titles'][] = $t->nodeValue;
 }
 
-// Итерация 2: Перебираем все meta-теги
+// Итерация 'description' и 'keywords'
+$metaIterator = new DomIterator($dom->getElementsByTagName('meta'));
 
-foreach ($dom->getElementsByTagName('meta') as $m) {
+foreach ($metaIterator as $m) {
 
     $name = $m->getAttribute('name');
     $content = $m->getAttribute('content');
